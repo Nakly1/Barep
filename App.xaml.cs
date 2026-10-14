@@ -1,8 +1,8 @@
 using System.Windows;
-using SystemMonitorDesktop.Controls;
-using SystemMonitorDesktop.Services;
+using Barep.Controls;
+using Barep.Services;
 
-namespace SystemMonitorDesktop;
+namespace Barep;
 
 public partial class App : Application
 {
@@ -22,7 +22,7 @@ public partial class App : Application
         base.OnStartup(e);
         ThemeManager.ApplySaved();
 
-        var window = new SystemMonitorDesktop.MainWindow();
+        var window = new Barep.MainWindow();
         MainWindow = window;
         window.Show();
     }

@@ -1,9 +1,9 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using SystemMonitorDesktop.Services;
+using Barep.Services;
 
-namespace SystemMonitorDesktop.Controls;
+namespace Barep.Controls;
 
 /// <summary>
 /// Piezas de interfaz que se construyen en código porque su número depende del
@@ -103,28 +103,8 @@ public static class UiKit
     public static TextBlock EmptyState(string message) =>
         Text(message, "T.Secondary", Brush("Br.TextTertiary"));
 
-    /// <summary>1,2 GB / 340 MB / 12 KB según convenga a la magnitud.</summary>
-    public static string FormatBytes(long megabytes) => megabytes switch
-    {
-        >= 1024 * 1024 => $"{megabytes / 1024.0 / 1024.0:0.0} TB",
-        >= 1024 => $"{megabytes / 1024.0:0.0} GB",
-        _ => $"{megabytes:N0} MB"
-    };
-
     /// <summary>Bytes a la unidad que toque: 832 MB, 49,3 GB, 1,2 TB.</summary>
-    public static string FormatSize(long bytes)
-    {
-        const double KB = 1024, MB = KB * 1024, GB = MB * 1024, TB = GB * 1024;
-        return bytes switch
-        {
-            >= (long)TB => $"{bytes / TB:0.0} TB",
-            >= (long)GB => $"{bytes / GB:0.0} GB",
-            >= (long)(100 * MB) => $"{bytes / MB:0} MB",
-            >= (long)MB => $"{bytes / MB:0.0} MB",
-            >= (long)KB => $"{bytes / KB:0} KB",
-            _ => $"{bytes} B"
-        };
-    }
+    public static string FormatSize(long bytes) => UiText.Size(bytes);
 
     /// <summary>845.312 → «845K»; 1.234.567 → «1,2 M». Para recuentos de ítems.</summary>
     public static string CompactCount(long count) => count switch
@@ -139,7 +119,7 @@ public static class UiKit
     /// y peor de leer; la app habla como una persona.
     /// </summary>
     public static string Plural(int count, string singular, string plural) =>
-        count == 1 ? $"1 {singular}" : $"{count:N0} {plural}";
+        UiText.Plural(count, singular, plural);
 
     public static string FormatSpeed(double kbps) => kbps < 1000
         ? $"{kbps:0} Kb/s"

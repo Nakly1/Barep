@@ -4,11 +4,12 @@
 
 Monitor, limpieza y optimización para **Windows 10 / 11**. Un solo `.exe`, sin instalar nada.
 
-Mira qué ocupa tu disco en un mapa de burbujas, desinstala apps sin dejar restos, limpia la caché,
-optimiza Windows con un interruptor por ajuste, ve dónde puedes ampliar RAM o SSD y comprueba a
-cuántos Hz va tu pantalla.
+Mira qué ocupa tu disco en un mapa de burbujas, revisa todo lo que tienes instalado, desinstala
+apps sin dejar restos, limpia la caché, mira qué se está ejecutando de verdad, optimiza Windows con
+un interruptor por ajuste, ve dónde puedes ampliar RAM o SSD y comprueba a cuántos Hz va tu
+pantalla.
 
-**v2.2**
+**v2.3**
 
 [![Descargar](https://img.shields.io/badge/⬇%20Descargar-Barep.exe-7C3AED?style=for-the-badge)](https://github.com/Nakly1/SystemMonitorDesktop/releases/latest/download/Barep.exe)
 [![Windows](https://img.shields.io/badge/Windows-10%20%2F%2011-0078D4?style=for-the-badge&logo=windows)](#)
@@ -57,6 +58,27 @@ ordenada por tamaño al lado.
 - **Revisar y eliminar** manda lo seleccionado a la papelera. Windows y las carpetas del sistema
   están protegidas.
 - El análisis se guarda: al volver se abre al instante.
+
+### Aplicaciones
+Todo lo que tienes instalado, programas y apps de la Microsoft Store, con su icono real,
+fabricante, versión, fecha y **lo que ocupa de verdad**: el programa, tus datos y la caché por
+separado.
+- **Borrar caché**: sólo las carpetas que son caché, registros o temporales. Te enseña qué va a
+  borrar, desmarcas lo que quieras y ves la barra de progreso. Tus sesiones, contraseñas y
+  archivos no se tocan.
+- **Desinstalar por completo**: antes de empezar te dice **con qué está enlazada** — si está
+  abierta ahora, si instaló un servicio, si arranca con Windows, si tiene tareas programadas, qué
+  tipos de archivo abre, si hay otros programas dentro de su carpeta y qué datos tuyos dejará.
+  Después abre el desinstalador oficial y busca los restos para mandarlos a la papelera.
+
+### Procesos
+Todo lo que se está ejecutando, **también lo que no se ve**: agrupado por programa, con memoria y
+procesador en vivo.
+- Filtros por aplicaciones, cosas en segundo plano y procesos de Windows, buscador y orden por
+  memoria, CPU o nombre.
+- Los «svchost» salen con el nombre del servicio que llevan dentro.
+- Al elegir un programa ves cada uno de sus procesos con su PID, desde cuándo está abierto y de
+  dónde sale; puedes finalizarlo entero. Lo que Windows necesita para funcionar no se deja cerrar.
 
 ### Optimizar
 Ajustes de Windows con su interruptor, en qué consiste cada uno en palabras sencillas y
@@ -113,6 +135,7 @@ Cada etiqueta `vX.Y.Z` que se sube a GitHub publica automáticamente `Barep.exe`
 - **WMI** (`System.Management`) para CPU, RAM, GPU, discos, ranuras, placa y monitores (EDID)
 - **API de configuración de pantalla** de Windows para Hz exactos, HDR y tipo de conexión
 - **Registro de Windows** para los ajustes de Optimizar y el inventario de aplicaciones
+- **API de procesos de Windows** para leer la ruta y el consumo de todo lo que se ejecuta
 - **Enumeración nativa de archivos** en paralelo para la Lupa, con caché comprimida en disco
 - **Shell de Windows** para iconos reales, papelera de reciclaje y «abrir con»
 
@@ -129,8 +152,13 @@ No. Lee solo tu propio equipo. Únicamente abre el navegador si tú pulsas un bo
 (por ejemplo, el manual de tu portátil o el tipo de panel de tu pantalla).
 
 **¿Borra algo sin preguntar?**
-No. Todo lo que se borra se enseña antes en una lista para marcar o desmarcar. Lo de la Lupa va a
-la papelera de reciclaje; la caché se borra del todo porque los programas la regeneran.
+No. Todo lo que se borra se enseña antes en una lista para marcar o desmarcar. Lo de la Lupa y los
+restos de una app desinstalada van a la papelera de reciclaje; la caché se borra del todo porque
+los programas la regeneran.
+
+**¿Puedo cargarme el equipo finalizando un proceso?**
+Los procesos que Windows necesita están bloqueados, y de los demás la app te avisa de qué puede
+dejar de funcionar. Nada de lo que se cierra ahí se desinstala: vuelve al reiniciar.
 
 **¿El plano de Mi PC es exacto?**
 Las piezas y las ranuras libres son las reales de tu equipo; su posición en el dibujo es la típica

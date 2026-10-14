@@ -1,6 +1,6 @@
 using System.Management;
 
-namespace SystemMonitorDesktop.Services;
+namespace Barep.Services;
 
 public enum PartKind { Cpu, Gpu, RamSlot, RamSoldered, M2Slot, SataBay, PcieSlot, Battery }
 

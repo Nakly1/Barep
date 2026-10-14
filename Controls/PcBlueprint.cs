@@ -7,9 +7,9 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Effects;
 using System.Windows.Shapes;
-using SystemMonitorDesktop.Services;
+using Barep.Services;
 
-namespace SystemMonitorDesktop.Controls;
+namespace Barep.Controls;
 
 /// <summary>
 /// Plano 2D visto desde arriba (con la tapa quitada) del equipo: un portátil o

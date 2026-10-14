@@ -7,10 +7,10 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
-using SystemMonitorDesktop.Controls;
-using SystemMonitorDesktop.Services;
+using Barep.Controls;
+using Barep.Services;
 
-namespace SystemMonitorDesktop.Views;
+namespace Barep.Views;
 
 /// <summary>
 /// La Lupa: mapa de burbujas del disco al estilo de CleanMyMac. Tres pantallas

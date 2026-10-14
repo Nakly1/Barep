@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using Microsoft.Win32;
 
-namespace SystemMonitorDesktop.Services;
+namespace Barep.Services;
 
 /// <summary>
 /// Aplicaciones instaladas, desinstalación completa (el desinstalador oficial y
@@ -321,7 +321,11 @@ public static class AppManager
         return found;
     }
 
-    private static List<string> NameVariants(InstalledApp app)
+    /// <summary>
+    /// Los nombres con los que la aplicación pudo crear sus carpetas: el que
+    /// muestra, el mismo sin arquitectura ni versión y el de su carpeta.
+    /// </summary>
+    public static List<string> NameVariants(InstalledApp app)
     {
         var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
@@ -346,7 +350,8 @@ public static class AppManager
         return set.ToList();
     }
 
-    private static List<string> PublisherVariants(string? publisher)
+    /// <summary>El fabricante tal cual y sin «Inc.», «S.L.» y compañía: muchas carpetas usan esa forma corta.</summary>
+    public static List<string> PublisherVariants(string? publisher)
     {
         var list = new List<string>();
         if (string.IsNullOrWhiteSpace(publisher)) return list;

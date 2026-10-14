@@ -5,7 +5,7 @@
     <UseWPF>true</UseWPF>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>SystemMonitorDesktop</RootNamespace>
+    <RootNamespace>Barep</RootNamespace>
     <AssemblyName>Barep</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <!-- Sin esto, `dotnet restore` no genera destino para net8.0-windows/win-x64
@@ -18,9 +18,9 @@
     <AssemblyTitle>Barep</AssemblyTitle>
     <Description>Monitor, limpieza y optimización de Windows.</Description>
     <Company>Barep</Company>
-    <Version>2.2.0</Version>
-    <FileVersion>2.2.0.0</FileVersion>
-    <AssemblyVersion>2.2.0.0</AssemblyVersion>
+    <Version>2.3.0</Version>
+    <FileVersion>2.3.0.0</FileVersion>
+    <AssemblyVersion>2.3.0.0</AssemblyVersion>
     <Copyright>Copyright © 2026</Copyright>
     <NeutralLanguage>es</NeutralLanguage>
   </PropertyGroup>

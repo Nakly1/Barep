@@ -1,4 +1,4 @@
-namespace SystemMonitorDesktop.Services;
+namespace Barep.Services;
 
 public record CpuInfo(
     string Name,
@@ -104,7 +104,6 @@ public record RealtimeSnapshot(
     NetSample Network,
     BatteryInfo Battery,
     TimeSpan Uptime,
-    IReadOnlyList<ProcessRow> TopProcesses,
     DateTime TakenAt)
 {
     public double RamPercent => RamTotalMB > 0

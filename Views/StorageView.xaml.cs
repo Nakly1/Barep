@@ -1,9 +1,9 @@
 using System.Windows;
 using System.Windows.Controls;
-using SystemMonitorDesktop.Controls;
-using SystemMonitorDesktop.Services;
+using Barep.Controls;
+using Barep.Services;
 
-namespace SystemMonitorDesktop.Views;
+namespace Barep.Views;
 
 public partial class StorageView : UserControl
 {

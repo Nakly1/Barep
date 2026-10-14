@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 using System.Security.Principal;
 using Microsoft.Win32;
 
-namespace SystemMonitorDesktop.Services;
+namespace Barep.Services;
 
 public enum TweakRestart { None, Explorer, SignOut, Reboot }
 

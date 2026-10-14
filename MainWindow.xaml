@@ -1,4 +1,4 @@
-<Window x:Class="SystemMonitorDesktop.MainWindow"
+<Window x:Class="Barep.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
@@ -98,7 +98,7 @@
                             </StackPanel>
                         </Button>
                         <Border Style="{StaticResource Divider}" Margin="0,0,0,14"/>
-                        <TextBlock Text="Barep 2.2" FontSize="11" FontWeight="Medium"
+                        <TextBlock Text="Barep 2.3" FontSize="11" FontWeight="Medium"
                                    Foreground="{StaticResource Br.TextSecondary}"/>
                         <TextBlock x:Name="FooterStatus" Text="Iniciando…"
                                    FontSize="10.5" Foreground="{StaticResource Br.TextTertiary}"
@@ -126,6 +126,10 @@
                         <RadioButton x:Name="NavLens" Content="Lupa"
                                      Style="{StaticResource NavItem}"
                                      Tag="{StaticResource Icon.Lens}"
+                                     Checked="Nav_Checked"/>
+                        <RadioButton x:Name="NavApps" Content="Aplicaciones"
+                                     Style="{StaticResource NavItem}"
+                                     Tag="{StaticResource Icon.Apps}"
                                      Checked="Nav_Checked"/>
                         <RadioButton x:Name="NavOptimize" Content="Optimizar"
                                      Style="{StaticResource NavItem}"

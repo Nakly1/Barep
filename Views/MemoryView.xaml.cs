@@ -2,10 +2,10 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
-using SystemMonitorDesktop.Controls;
-using SystemMonitorDesktop.Services;
+using Barep.Controls;
+using Barep.Services;
 
-namespace SystemMonitorDesktop.Views;
+namespace Barep.Views;
 
 public partial class MemoryView : UserControl
 {

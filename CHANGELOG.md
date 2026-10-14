@@ -7,6 +7,32 @@ el versionado sigue [SemVer](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+## [2.3.0] - 2026-10-14
+
+### Added
+- **Aplicaciones**: lista de todo lo instalado (programas y apps de la
+  Microsoft Store) con su icono, fabricante, version, fecha y lo que ocupa
+  entre programa, datos y cache.
+- Borrado de la cache de una aplicacion concreta, con revision previa de lo que
+  se va a borrar y barra de progreso.
+- Antes de desinstalar por completo, ventana con **con que esta enlazada**: si
+  esta abierta, servicios, arranque de Windows, tareas programadas, tipos de
+  archivo que abre, programas dentro de su carpeta y datos que dejara.
+
+### Changed
+- **Procesos** muestra ahora todo lo que se ejecuta, incluido lo que trabaja sin
+  ventana: agrupado por programa, con CPU y memoria en vivo, buscador, filtros
+  (aplicaciones / segundo plano / Windows), orden y ficha con cada PID.
+- Los procesos de Windows se identifican por su servicio (ya no son seis
+  «svchost» sin nombre) y los que el sistema necesita no se pueden finalizar.
+- La lectura de cada dos segundos ya no enumera todos los procesos: el resumen
+  arranca y se actualiza mas rapido.
+- Nombre interno del proyecto unificado a `Barep` (`Barep.csproj`).
+
+### Removed
+- Codigo sin uso: limpieza de temporales antigua, dos ayudantes de formato y una
+  propiedad del arbol de la Lupa que ya no se consultaba.
+
 ## [2.2.0] - 2026-09-19
 
 ### Added

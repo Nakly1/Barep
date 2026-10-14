@@ -3,7 +3,7 @@ using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace SystemMonitorDesktop.Services;
+namespace Barep.Services;
 
 /// <summary>Resumen de un análisis guardado, sin cargar el árbol entero.</summary>
 public sealed record CachedScanInfo(string SourceKey, DateTime ScannedAt, long Size, string FilePath);

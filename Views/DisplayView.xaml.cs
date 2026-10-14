@@ -5,10 +5,10 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using System.Windows.Threading;
-using SystemMonitorDesktop.Controls;
-using SystemMonitorDesktop.Services;
+using Barep.Controls;
+using Barep.Services;
 
-namespace SystemMonitorDesktop.Views;
+namespace Barep.Views;
 
 /// <summary>
 /// Pantalla: frecuencia (Hz), resolución, tamaño, HDR y fabricante del panel de

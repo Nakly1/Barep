@@ -2,7 +2,7 @@ using System.IO;
 using System.IO.Enumeration;
 using System.Runtime.InteropServices;
 
-namespace SystemMonitorDesktop.Services;
+namespace Barep.Services;
 
 /// <summary>Una categoría de caché que se puede limpiar, ya medida.</summary>
 public sealed record CacheTarget(

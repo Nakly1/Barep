@@ -1,7 +1,7 @@
 using System.IO;
 using System.Text;
 
-namespace SystemMonitorDesktop.Services;
+namespace Barep.Services;
 
 /// <summary>
 /// Prueba de ida y vuelta de todos los ajustes de Optimizar: cambia cada uno,

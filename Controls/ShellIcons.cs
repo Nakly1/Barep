@@ -6,9 +6,9 @@ using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using SystemMonitorDesktop.Services;
+using Barep.Services;
 
-namespace SystemMonitorDesktop.Controls;
+namespace Barep.Controls;
 
 /// <summary>
 /// Iconos reales de Windows para aplicaciones y archivos, a 48 px (la lista

@@ -4,10 +4,10 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
-using SystemMonitorDesktop.Controls;
-using SystemMonitorDesktop.Services;
+using Barep.Controls;
+using Barep.Services;
 
-namespace SystemMonitorDesktop.Views;
+namespace Barep.Views;
 
 /// <summary>
 /// Optimizar: una columna de ajustes de Windows, cada uno con su interruptor,

@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace SystemMonitorDesktop.Services;
+namespace Barep.Services;
 
 /// <summary>
 /// Informe legible del estado del equipo. Es una foto informativa; para dejar
@@ -76,7 +76,7 @@ public static class SystemReport
             : "    Sin batería (equipo de sobremesa)");
 
         Section(sb, "PROCESOS CON MÁS MEMORIA");
-        foreach (var p in r.TopProcesses)
+        foreach (var p in AppServices.Hardware.GetTopProcesses())
             sb.AppendLine($"    {p.Name,-32} PID {p.Pid,-8} {p.MemoryMB,7:N0} MB");
 
         sb.AppendLine();

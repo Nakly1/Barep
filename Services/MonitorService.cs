@@ -1,6 +1,6 @@
 using System.Windows.Threading;
 
-namespace SystemMonitorDesktop.Services;
+namespace Barep.Services;
 
 /// <summary>
 /// Latido de la aplicación. Toma una lectura del sistema cada pocos segundos

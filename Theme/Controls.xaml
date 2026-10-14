@@ -450,6 +450,43 @@
         </Setter>
     </Style>
 
+    <!--
+        Lista en la que se elige una fila. Va aparte de FlatList porque sus
+        filas sí reciben el foco: WPF sólo marca como seleccionado lo que puede
+        enfocar, así que con Focusable="False" el clic no selecciona nada.
+    -->
+    <Style x:Key="SelectList" TargetType="ListBox" BasedOn="{StaticResource FlatList}">
+        <Setter Property="ItemContainerStyle">
+            <Setter.Value>
+                <Style TargetType="ListBoxItem">
+                    <Setter Property="Padding" Value="0"/>
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                    <Setter Property="Focusable" Value="True"/>
+                    <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                    <Setter Property="Cursor" Value="Hand"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ListBoxItem">
+                                <Border x:Name="Bd" Background="Transparent" CornerRadius="9"
+                                        Padding="10,7" Margin="0,1">
+                                    <ContentPresenter/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="Bd" Property="Background" Value="{StaticResource Br.SurfaceHover}"/>
+                                    </Trigger>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter TargetName="Bd" Property="Background" Value="{StaticResource Br.AccentTint}"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- ══════════════ Opción de unidad (pantalla de inicio de la Lupa) ══════════════ -->
 
     <Style x:Key="SourceOption" TargetType="RadioButton">
@@ -628,6 +665,7 @@
     <Geometry x:Key="Glyph.Sun">M8,12 A4,4 0 1 1 16,12 A4,4 0 1 1 8,12 Z M11,1.5 H13 V4.5 H11 Z M11,19.5 H13 V22.5 H11 Z M1.5,11 H4.5 V13 H1.5 Z M19.5,11 H22.5 V13 H19.5 Z M4.2,5.6 L5.6,4.2 L7.7,6.3 L6.3,7.7 Z M16.3,17.7 L17.7,16.3 L19.8,18.4 L18.4,19.8 Z M16.3,6.3 L18.4,4.2 L19.8,5.6 L17.7,7.7 Z M4.2,18.4 L6.3,16.3 L7.7,17.7 L5.6,19.8 Z</Geometry>
     <Geometry x:Key="Glyph.Moon">M20.5,14.5 C19.3,15.1 18,15.4 16.6,15.4 C11.9,15.4 8.1,11.6 8.1,6.9 C8.1,5.5 8.4,4.2 9,3 C5.3,4.2 2.6,7.7 2.6,11.8 C2.6,17 6.8,21.2 12,21.2 C16.1,21.2 19.6,18.5 20.5,14.5 Z</Geometry>
     <Geometry x:Key="Icon.Optimize">M13.5,2 L4.5,13.5 H11 L10,22 L19.5,10 H13 Z</Geometry>
+    <Geometry x:Key="Icon.Apps">M3,3 H10 V10 H3 Z M14,3 H21 V10 H14 Z M3,14 H10 V21 H3 Z M14,17.5 A3.5,3.5 0 1 1 21,17.5 A3.5,3.5 0 1 1 14,17.5 Z</Geometry>
     <Geometry x:Key="Glyph.Info">M12,2.5 A9.5,9.5 0 1 1 11.99,2.5 Z M11,10.5 H13 V17 H11 Z M11,7 H13 V9 H11 Z</Geometry>
 
     <!-- ══════════════ Navegación lateral ══════════════ -->

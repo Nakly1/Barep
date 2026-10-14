@@ -1,4 +1,4 @@
-namespace SystemMonitorDesktop.Services;
+namespace Barep.Services;
 
 /// <summary>
 /// Servicios compartidos por toda la aplicación. Un localizador estático es

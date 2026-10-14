@@ -2,7 +2,7 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Media;
 
-namespace SystemMonitorDesktop.Controls;
+namespace Barep.Controls;
 
 /// <summary>
 /// Gráfico de línea compacto para una sola serie 0–100. Dibuja por

@@ -5,7 +5,7 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace SystemMonitorDesktop.Services;
+namespace Barep.Services;
 
 public enum PartStatus
 {

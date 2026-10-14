@@ -1,4 +1,4 @@
-namespace SystemMonitorDesktop.Services;
+namespace Barep.Services;
 
 /// <summary>
 /// Algunas BIOS no escriben el nombre del fabricante de RAM en el SMBIOS y dejan

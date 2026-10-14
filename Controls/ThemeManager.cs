@@ -1,7 +1,7 @@
 using System.IO;
 using System.Windows;
 
-namespace SystemMonitorDesktop.Controls;
+namespace Barep.Controls;
 
 /// <summary>
 /// Tema oscuro (negro con morado) o claro (blanco con morado). Las vistas usan

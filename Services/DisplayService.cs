@@ -1,7 +1,7 @@
 using System.Management;
 using System.Runtime.InteropServices;
 
-namespace SystemMonitorDesktop.Services;
+namespace Barep.Services;
 
 /// <summary>Una pantalla conectada, con lo que Windows sabe de ella.</summary>
 public sealed record DisplayInfo(

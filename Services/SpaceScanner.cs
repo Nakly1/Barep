@@ -2,7 +2,7 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Enumeration;
 
-namespace SystemMonitorDesktop.Services;
+namespace Barep.Services;
 
 /// <summary>
 /// Recorre una unidad o carpeta y construye el árbol de tamaños que dibuja la

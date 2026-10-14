@@ -5,7 +5,7 @@ using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 using Microsoft.Win32;
 
-namespace SystemMonitorDesktop.Services;
+namespace Barep.Services;
 
 /// <summary>
 /// Única puerta de entrada al hardware. Todas las consultas WMI viven aquí y
@@ -58,7 +58,6 @@ public class HardwareService
             Network: GetNetworkSample(),
             Battery: GetBattery(),
             Uptime: GetUptime(),
-            TopProcesses: GetTopProcesses(),
             TakenAt: DateTime.Now);
     }
 
@@ -498,41 +497,6 @@ public class HardwareService
             return new BatteryInfo(true, percent, onAc, status);
         }
         catch { return new BatteryInfo(false, 0, false, "—"); }
-    }
-
-    // ────────────────────────── Mantenimiento ──────────────────────────
-
-    public (long FreedMB, string Message) CleanTempFiles()
-    {
-        long freedBytes = 0;
-        var paths = new[] { Path.GetTempPath(), @"C:\Windows\Temp" };
-
-        foreach (var dir in paths)
-        {
-            if (!Directory.Exists(dir)) continue;
-            try
-            {
-                foreach (var file in Directory.EnumerateFiles(dir, "*", SearchOption.AllDirectories))
-                {
-                    try
-                    {
-                        var info = new FileInfo(file);
-                        // Un archivo tocado hace menos de una hora puede seguir
-                        // en uso por una instalación en curso.
-                        if ((DateTime.UtcNow - info.LastWriteTimeUtc).TotalHours < 1) continue;
-                        freedBytes += info.Length;
-                        File.Delete(file);
-                    }
-                    catch { /* en uso o sin permisos */ }
-                }
-            }
-            catch { }
-        }
-
-        long freedMB = freedBytes / (1024 * 1024);
-        return (freedMB, freedMB > 0
-            ? $"Limpieza completada. Se liberaron {freedMB} MB."
-            : "No había temporales que borrar, o estaban en uso.");
     }
 
     // ────────────────────────── Utilidades ──────────────────────────

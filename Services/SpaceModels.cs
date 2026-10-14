@@ -1,4 +1,4 @@
-namespace SystemMonitorDesktop.Services;
+namespace Barep.Services;
 
 /// <summary>Qué representa un nodo del mapa de espacio.</summary>
 public enum SpaceNodeKind
@@ -59,8 +59,6 @@ public sealed class SpaceNode
     /// <summary>Carpeta real en disco (el grupo «N archivos más» vive en la de su padre).</summary>
     public string FolderPath => Kind == SpaceNodeKind.Aggregate ? Parent?.FullPath ?? "" : FullPath;
 
-    public bool IsFolderLike => Kind is SpaceNodeKind.Drive or SpaceNodeKind.Folder
-        or SpaceNodeKind.AppsRoot;
 
     /// <summary>Nombre para mostrar: el de la aplicación si la carpeta es una.</summary>
     public string DisplayName => App is not null && Kind != SpaceNodeKind.Drive

@@ -4,11 +4,11 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Interop;
 using System.Windows.Threading;
-using SystemMonitorDesktop.Controls;
-using SystemMonitorDesktop.Services;
-using SystemMonitorDesktop.Views;
+using Barep.Controls;
+using Barep.Services;
+using Barep.Views;
 
-namespace SystemMonitorDesktop;
+namespace Barep;
 
 public partial class MainWindow : Window
 {
@@ -94,6 +94,7 @@ public partial class MainWindow : Window
         "NavMemory" => new MemoryView(),
         "NavStorage" => new StorageView(),
         "NavLens" => new LupaView(),
+        "NavApps" => new AppsView(),
         "NavOptimize" => new OptimizeView(),
         "NavPc" => new PcView(),
         "NavDisplay" => new DisplayView(),

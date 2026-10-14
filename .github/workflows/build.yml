@@ -25,14 +25,14 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Restore
-        run: dotnet restore SystemMonitorDesktop.csproj
+        run: dotnet restore Barep.csproj
 
       - name: Build (Release)
-        run: dotnet build SystemMonitorDesktop.csproj -c Release --no-restore
+        run: dotnet build Barep.csproj -c Release --no-restore
 
       # Un solo Barep.exe autocontenido: no hace falta instalar .NET para usarlo.
       - name: Publish (win-x64, un solo exe)
-        run: dotnet publish SystemMonitorDesktop.csproj -c Release -r win-x64 -o publish
+        run: dotnet publish Barep.csproj -c Release -r win-x64 -o publish
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
