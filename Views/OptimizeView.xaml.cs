@@ -515,8 +515,15 @@ public partial class OptimizeView : UserControl
             _switch.IsEnabled = state is not null;
             _updating = false;
 
-            _stateText.Text = state switch { true => "Activado", false => "Desactivado", _ => "Desconocido" };
-            _stateText.Foreground = UiKit.Brush(state == true ? "Br.TextPrimary" : "Br.TextTertiary");
+            // Bajo el interruptor: cómo está la función y, si ya es lo recomendado, un ✓ en verde.
+            var optimal = state is not null && Tweak.Recommended is not null && state == Tweak.Recommended;
+            _stateText.Text = state switch { true => "Activado", false => "Desactivado", _ => "Desconocido" } + (optimal ? " ✓" : "");
+            _stateText.Foreground = UiKit.Brush(optimal ? "Br.Positive" : state == true ? "Br.TextPrimary" : "Br.TextTertiary");
+            _switch.ToolTip = Tweak.Recommended is null
+                ? "Déjalo como prefieras"
+                : optimal
+                    ? $"Está {(state == true ? "activado" : "desactivado")}, que es lo recomendado"
+                    : $"Recomendado: {(Tweak.Recommended == true ? "activarlo" : "desactivarlo")}";
 
             if (Tweak.Recommended is null)
                 SetStatus("A tu gusto", "Br.TextTertiary");

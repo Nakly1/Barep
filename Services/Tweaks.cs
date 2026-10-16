@@ -621,13 +621,14 @@ public static class TweakService
     }
 
     /// <summary>Vuelve a abrir la app como administrador, directamente en Optimizar.</summary>
-    public static bool RelaunchAsAdmin()
+    /// <param name="page">Sección con la que abrir de nuevo: «optimizar», «memoria» o «red».</param>
+    public static bool RelaunchAsAdmin(string page = "optimizar")
     {
         try
         {
             var exe = Environment.ProcessPath;
             if (exe is null) return false;
-            Process.Start(new ProcessStartInfo(exe, "--open optimizar") { UseShellExecute = true, Verb = "runas" });
+            Process.Start(new ProcessStartInfo(exe, $"--open {page}") { UseShellExecute = true, Verb = "runas" });
             return true;
         }
         catch { return false; }   // el usuario dijo que no en el aviso de Windows

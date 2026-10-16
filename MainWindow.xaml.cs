@@ -47,14 +47,22 @@ public partial class MainWindow : Window
 
         // «Abrir como administrador» relanza la app con este argumento para volver a Optimizar.
         var args = Environment.GetCommandLineArgs();
-        if (StartPage is null && args.Any(a => a.Equals("optimizar", StringComparison.OrdinalIgnoreCase)))
-            StartPage = nameof(NavOptimize);
+        if (StartPage is null)
+        {
+            if (args.Any(a => a.Equals("optimizar", StringComparison.OrdinalIgnoreCase))) StartPage = nameof(NavOptimize);
+            else if (args.Any(a => a.Equals("memoria", StringComparison.OrdinalIgnoreCase))) StartPage = nameof(NavMemory);
+            else if (args.Any(a => a.Equals("red", StringComparison.OrdinalIgnoreCase))) StartPage = nameof(NavNetwork);
+        }
         if (StartPage is not null && FindName(StartPage) is RadioButton start)
             start.IsChecked = true;
 
         _clock.Tick += (_, _) => UpdateClock();
         _clock.Start();
         UpdateClock();
+
+        AppServices.Network.NewDevices += OnNewDevices;
+        AppServices.Network.Alert += OnNetworkAlert;
+        AppServices.Network.Start();
 
         AppServices.Monitor.Sampled += OnSampled;
         AppServices.Monitor.Start();
@@ -64,8 +72,15 @@ public partial class MainWindow : Window
     private void OnClosed(object? sender, EventArgs e)
     {
         AppServices.Monitor.Sampled -= OnSampled;
-        if (!IsSwitchingTheme) AppServices.Monitor.Stop();
+        AppServices.Network.NewDevices -= OnNewDevices;
+        AppServices.Network.Alert -= OnNetworkAlert;
+        if (!IsSwitchingTheme)
+        {
+            AppServices.Monitor.Stop();
+            AppServices.Network.Stop();
+        }
         _clock.Stop();
+        _toastTimer.Stop();
     }
 
     // ────────────────────────── Navegación ──────────────────────────
@@ -99,10 +114,83 @@ public partial class MainWindow : Window
         "NavPc" => new PcView(),
         "NavDisplay" => new DisplayView(),
         "NavProcesses" => new ProcessesView(),
+        "NavNetwork" => new NetworkView(),
         "NavEvidence" => new EvidenceView(),
-        "NavTools" => new ToolsView(),
         _ => new OverviewView()
     };
+
+    // ────────────────────────── Avisos de la red ──────────────────────────
+
+    private readonly DispatcherTimer _toastTimer = new() { Interval = TimeSpan.FromSeconds(20) };
+
+    private void OnNewDevices(IReadOnlyList<Services.Net.NetDevice> devices)
+    {
+        var first = Services.Net.DeviceIdentity.DisplayName(devices[0], null);
+        ShowToast(devices.Count == 1
+            ? $"Nuevo en tu red: {first} ({devices[0].IpText})"
+            : $"{devices.Count} aparatos nuevos en tu red: {first} y más", critical: false);
+    }
+
+    private void OnNetworkAlert(string message) => ShowToast("Red: " + message, critical: true);
+
+    private void ShowToast(string text, bool critical)
+    {
+        NetToastText.Text = text;
+        NetToastText.ToolTip = text;
+        NetToast.Background = UiKit.Brush(critical ? "Br.CriticalTint" : "Br.WarnTint");
+        NetToastDot.Fill = UiKit.Brush(critical ? "Br.Critical" : "Br.Warn");
+        NetToast.Visibility = Visibility.Visible;
+
+        _toastTimer.Stop();
+        _toastTimer.Tick -= HideToast;
+        _toastTimer.Tick += HideToast;
+        // Un aviso grave se queda hasta que se mire.
+        if (!critical) _toastTimer.Start();
+
+        if (!IsActive) Flash();
+    }
+
+    private void HideToast(object? sender, EventArgs e)
+    {
+        _toastTimer.Stop();
+        NetToast.Visibility = Visibility.Collapsed;
+    }
+
+    private void NetToast_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        HideToast(null, EventArgs.Empty);
+        NavNetwork.IsChecked = true;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct FlashInfo
+    {
+        public uint Size;
+        public IntPtr Window;
+        public uint Flags;
+        public uint Count;
+        public uint Timeout;
+    }
+
+    [DllImport("user32.dll")]
+    private static extern bool FlashWindowEx(ref FlashInfo info);
+
+    /// <summary>Hace parpadear el icono de la barra de tareas hasta que se vuelva a la ventana.</summary>
+    private void Flash()
+    {
+        try
+        {
+            var info = new FlashInfo
+            {
+                Size = (uint)Marshal.SizeOf<FlashInfo>(),
+                Window = new WindowInteropHelper(this).Handle,
+                Flags = 0x3 | 0xC, // FLASHW_ALL | FLASHW_TIMERNOFG
+                Count = uint.MaxValue
+            };
+            FlashWindowEx(ref info);
+        }
+        catch { }
+    }
 
     // ────────────────────────── Tema ──────────────────────────
 

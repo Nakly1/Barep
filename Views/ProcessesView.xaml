@@ -113,7 +113,7 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-            <TextBox x:Name="SearchBox" Style="{StaticResource Field}" Height="34"
+            <TextBox x:Name="SearchBox" Style="{StaticResource Field}" Height="34" Padding="11,0"
                      TextChanged="Search_Changed" ToolTip="Buscar por nombre, editor, servicio o PID"/>
             <TextBlock Text="Buscar un programa o proceso…" Style="{StaticResource T.Caption}"
                        Margin="13,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False"

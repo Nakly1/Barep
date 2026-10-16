@@ -1,15 +1,17 @@
 <div align="center">
 
+<img src="Assets/logo.png" width="112" alt="Barep">
+
 # Barep
 
 Monitor, limpieza y optimización para **Windows 10 / 11**. Un solo `.exe`, sin instalar nada.
 
 Mira qué ocupa tu disco en un mapa de burbujas, revisa todo lo que tienes instalado, desinstala
-apps sin dejar restos, limpia la caché, mira qué se está ejecutando de verdad, optimiza Windows con
-un interruptor por ajuste, ve dónde puedes ampliar RAM o SSD y comprueba a cuántos Hz va tu
-pantalla.
+apps sin dejar restos, limpia la caché, mira qué se está ejecutando de verdad, vigila quién se
+conecta a tu Wi-Fi, mide tu internet, optimiza Windows con un interruptor por ajuste, ve dónde
+puedes ampliar RAM o SSD y comprueba a cuántos Hz va tu pantalla.
 
-**v2.3**
+**v2.4**
 
 [![Descargar](https://img.shields.io/badge/⬇%20Descargar-Barep.exe-7C3AED?style=for-the-badge)](https://github.com/Nakly1/SystemMonitorDesktop/releases/latest/download/Barep.exe)
 [![Windows](https://img.shields.io/badge/Windows-10%20%2F%2011-0078D4?style=for-the-badge&logo=windows)](#)
@@ -41,6 +43,8 @@ ficha del equipo (fabricante, modelo, placa base, BIOS).
 ### Memoria
 Cada módulo de RAM por separado: fabricante, número de parte y de serie, ranura, tipo
 (DDR4, DDR5, LPDDR5…), velocidad nominal y real, y ranuras libres para ampliar.
+- **Liberar memoria**: hace que los programas suelten la RAM que tienen apartada sin usar y, como
+  administrador, vacía la caché de archivos de Windows. Te dice cuánto se liberó.
 
 ### Almacenamiento
 Volúmenes con su espacio y las unidades físicas con número de serie, interfaz y firmware.
@@ -80,6 +84,30 @@ procesador en vivo.
 - Al elegir un programa ves cada uno de sus procesos con su PID, desde cuándo está abierto y de
   dónde sale; puedes finalizarlo entero. Lo que Windows necesita para funcionar no se deja cerrar.
 
+### Red
+Todo lo que pasa en tu red, en pestañas:
+- **Aparatos**: cada móvil, PC, tele, consola, impresora o bombilla conectada, con su marca y,
+  cuando el aparato lo anuncia, **su modelo exacto** (iPhone 15 Pro, Galaxy S23, Chromecast,
+  el modelo del router…). Dice de dónde sale cada dato para no confundir una suposición con un
+  hecho, y detecta las **direcciones privadas** que usan los móviles modernos. Le puedes poner
+  nombre a cada uno («Móvil de mamá»), marcarlo como tuyo, ver sus puertos abiertos con lo que
+  significa cada uno y buscar fotos del modelo.
+- **Actividad**: vigila la red mientras Barep está abierto. Apunta quién entra y quién sale, cuánto
+  tiempo lleva conectado cada aparato hoy y **avisa en la barra de arriba cuando aparece uno que
+  nunca se había conectado**.
+- **Velocidad**: test de bajada, subida, ping y variación con historial, explicado en cristiano
+  («da para 4K en una pantalla…»).
+- **Wi-Fi**: señal, banda, canal, estándar (Wi-Fi 5/6/7) y cifrado de tu red, las redes de
+  alrededor con su seguridad y **el canal más libre** para tu router. Para que vaya más rápido:
+  quita el ahorro de energía del adaptador, mide tu DNS contra Cloudflare, Google y Quad9 y
+  cámbialo con un clic, y te dice qué tocar en el router.
+- **Seguridad**: puntuación de 0 a 100 revisando el cifrado del Wi-Fi, el cortafuegos, los
+  puertos abiertos del PC y del router (Telnet, UPnP, panel sin cifrar), Escritorio remoto, SMB1,
+  proxy, archivo hosts, DNS, aparatos sin reconocer, depuración Android expuesta y **si alguien
+  está suplantando al router** (ARP spoofing).
+- **Conexiones**: con qué servidores habla cada programa del PC ahora mismo y qué puertos tiene
+  abiertos a la red.
+
 ### Optimizar
 Ajustes de Windows con su interruptor, en qué consiste cada uno en palabras sencillas y
 **qué conviene saber antes** (qué cambia, cómo se verá, qué deja de funcionar).
@@ -104,10 +132,15 @@ Hz actuales y máximos, resolución nativa, pulgadas, escala, HDR, bits de color
 panel. Si tu pantalla admite más Hz de los que usa, te lo dice y los sube con un clic; si la
 imagen falla, vuelve sola a los anteriores en 15 segundos.
 
-### Evidencia de hardware
-Antes de llevar el equipo al servicio técnico, genera un **acta** con el número de serie de cada
-pieza (procesador, RAM, gráficas, discos, placa, BIOS, MAC) firmada con SHA-256. Al recogerlo,
-la app compara pieza por pieza y te dice qué cambió, qué falta y qué apareció.
+### Evidencia
+Para cuando dejas el equipo en un servicio técnico, en dos pasos:
+1. **Antes de dejarlo**: «Crear acta» guarda el número de serie de cada pieza (procesador, RAM,
+   discos, placa, tarjeta de red) con una huella SHA-256 y un código corto para fotografiar.
+2. **Al recogerlo**: eliges el acta y pulsas «Comprobar». El acta se ve en la app como un
+   documento y cada pieza se marca como **igual**, **cambió**, **falta** o **nueva**.
+
+Si alguien edita el archivo del acta, Barep lo detecta. Se puede guardar en texto para imprimirla
+y firmarla, y también una ficha completa del equipo para enviársela a quien lo repare.
 
 ### Temas
 Oscuro (negro) o claro (blanco), con acento morado. Se cambia desde la barra lateral.
@@ -136,6 +169,8 @@ Cada etiqueta `vX.Y.Z` que se sube a GitHub publica automáticamente `Barep.exe`
 - **API de configuración de pantalla** de Windows para Hz exactos, HDR y tipo de conexión
 - **Registro de Windows** para los ajustes de Optimizar y el inventario de aplicaciones
 - **API de procesos de Windows** para leer la ruta y el consumo de todo lo que se ejecuta
+- **ARP, mDNS/Bonjour, UPnP/SSDP y NetBIOS** para descubrir y reconocer los aparatos de la red,
+  con el registro de fabricantes del IEEE incluido en el ejecutable
 - **Enumeración nativa de archivos** en paralelo para la Lupa, con caché comprimida en disco
 - **Shell de Windows** para iconos reales, papelera de reciclaje y «abrir con»
 
@@ -148,8 +183,18 @@ No para el uso normal. Algunos ajustes de Optimizar sí (la app lo indica y ofre
 administrador), y desinstalar programas puede pedir el permiso de Windows.
 
 **¿Envía datos a internet?**
-No. Lee solo tu propio equipo. Únicamente abre el navegador si tú pulsas un botón de «Buscar»
-(por ejemplo, el manual de tu portátil o el tipo de panel de tu pantalla).
+No. Todo lo que analiza se queda en tu equipo. Sólo se conecta a internet para el test de
+velocidad y para ver tu IP pública (ambos contra los servidores de Cloudflare, sin mandar nada
+tuyo), y abre el navegador si pulsas un botón de «Buscar» o «Ver fotos».
+
+**¿Puedo ver lo que navegan los demás en mi Wi-Fi?**
+No, y Barep no lo intenta: eso exigiría interceptar el tráfico de otras personas. Lo que sí ves
+es quién está conectado, desde cuándo, qué es cada aparato y qué tiene abierto.
+
+**¿Por qué algunos móviles salen sin modelo?**
+Android e iPhone usan una MAC aleatoria y muchos no anuncian su modelo en la red. Barep enseña lo
+que el aparato dice de sí mismo (nombre, servicios, ficha UPnP) y lo marca como «probable» cuando
+lo deduce. Ponle un nombre y así lo reconocerás siempre.
 
 **¿Borra algo sin preguntar?**
 No. Todo lo que se borra se enseña antes en una lista para marcar o desmarcar. Lo de la Lupa y los
@@ -171,7 +216,8 @@ No. Usa WMI y el registro de Windows, así que es solo para Windows 10 / 11.
 
 ## Licencia
 
-**MIT** — haz con este código lo que quieras.
+**MIT** — haz con este código lo que quieras. Los avisos de terceros están en
+[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
 
 <div align="center">
 

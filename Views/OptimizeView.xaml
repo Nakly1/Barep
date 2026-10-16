@@ -9,7 +9,7 @@
 
                 <TextBlock Text="Optimizar" Style="{StaticResource T.Title}"/>
                 <TextBlock Style="{StaticResource T.Secondary}" Margin="0,4,0,20" MaxWidth="760" HorizontalAlignment="Left"
-                           Text="Ajustes de Windows para que el equipo vaya más ligero, sea más privado y tenga menos anuncios. Cada interruptor muestra si la función está encendida; todo se puede deshacer con el mismo interruptor."/>
+                           Text="Ajustes de Windows para que el equipo vaya más ligero, sea más privado y tenga menos anuncios. El interruptor muestra si esa función de Windows está encendida o apagada, no si está «bien». Para eso mira la etiqueta junto al título: «Optimizado» en verde es que ya está como recomendamos y no hay que tocarlo. Todo se deshace con el mismo interruptor."/>
 
                 <!-- Resumen -->
                 <Border Style="{StaticResource CardHero}" Margin="0,0,0,18">

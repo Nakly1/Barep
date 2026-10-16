@@ -1,354 +1,443 @@
+using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Interop;
 using System.Windows.Media;
 using Microsoft.Win32;
 using Barep.Controls;
 using Barep.Services;
+using Path = System.IO.Path;
 
 namespace Barep.Views;
 
+/// <summary>
+/// Evidencia de hardware en dos pasos: crear el acta antes de dejar el equipo y
+/// comprobarla al recogerlo. El acta se ve dentro de la app como un documento,
+/// y al comprobarla cada pieza queda marcada como igual, cambiada o ausente.
+/// </summary>
 public partial class EvidenceView : UserControl
 {
-    private EvidenceComparison? _lastComparison;
+    private static readonly CultureInfo Spanish = new("es-ES");
+
+    private readonly ObservableCollection<ActaRow> _actas = new();
+    private EvidenceService.SavedActa? _current;
+    private EvidenceComparison? _comparison;
+    private bool _loaded;
 
     public EvidenceView()
     {
         InitializeComponent();
-        Loaded += (_, _) => ShowPartCount();
+        Loaded += OnLoaded;
     }
 
-    /// <summary>
-    /// Contar las piezas exige releer todo el SMBIOS, así que se hace fuera del
-    /// hilo de interfaz: abrir la pestaña no debe congelar la ventana.
-    /// </summary>
-    private async void ShowPartCount()
+    private void OnLoaded(object sender, RoutedEventArgs e)
     {
-        if (PartCountText.Text.Length > 0) return;
+        if (_loaded) return;
+        _loaded = true;
+        ActaList.ItemsSource = _actas;
+        _ = RefreshListAsync(selectPath: null);
+        _ = CountPartsAsync();
+    }
+
+    /// <summary>Contar las piezas obliga a releer el SMBIOS: se hace fuera del hilo de la interfaz.</summary>
+    private async Task CountPartsAsync()
+    {
         try
         {
             var doc = await Task.Run(() => AppServices.Evidence.Capture());
-            PartCountText.Text = $"{doc.Parts.Count} piezas identificables en este equipo";
+            var withSerial = doc.Parts.Count(p => p.HasIdentity);
+            PartCountText.Text = $"Este equipo tiene {UiKit.Plural(doc.Parts.Count, "pieza", "piezas")}, " +
+                                 $"{withSerial} con número de serie";
         }
         catch { PartCountText.Text = ""; }
     }
 
-    // ────────────────────────── Generar ──────────────────────────
-
-    private async void GenerateButton_Click(object sender, RoutedEventArgs e)
+    private async Task RefreshListAsync(string? selectPath)
     {
-        var dialog = new SaveFileDialog
-        {
-            Title = "Guardar acta de hardware",
-            FileName = EvidenceService.SuggestedFileName(EvidenceService.FileExtension),
-            Filter = "Acta de hardware (*.smev.json)|*.smev.json",
-            InitialDirectory = EvidenceService.DefaultFolder,
-            AddExtension = false
-        };
-        if (dialog.ShowDialog() != true) return;
+        var saved = await Task.Run(() => AppServices.Evidence.ListSaved());
 
-        GenerateButton.IsEnabled = false;
-        SetStatus("Leyendo el hardware y generando el acta…", "Br.TextSecondary");
+        // Un acta abierta desde otra carpeta se mantiene en la lista.
+        if (_current is not null && saved.All(s => !SamePath(s.Path, _current.Path)) && File.Exists(_current.Path))
+            saved.Insert(0, _current);
 
+        _actas.Clear();
+        foreach (var acta in saved) _actas.Add(new ActaRow(acta));
+        NoActasText.Visibility = _actas.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        ActaList.Visibility = _actas.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
+
+        var target = selectPath ?? _current?.Path;
+        var row = target is null ? null : _actas.FirstOrDefault(a => SamePath(a.Acta.Path, target));
+        if (row is not null) ActaList.SelectedItem = row;
+        else if (_current is null) ShowActa(null);
+    }
+
+    private static bool SamePath(string a, string b) => string.Equals(a, b, StringComparison.OrdinalIgnoreCase);
+
+    // ────────────────────────── Paso 1 · crear ──────────────────────────
+
+    private void NoteBox_TextChanged(object sender, TextChangedEventArgs e) =>
+        NoteHint.Visibility = NoteBox.Text.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
+
+    private async void Create_Click(object sender, RoutedEventArgs e)
+    {
+        CreateButton.IsEnabled = false;
+        CreateButton.Content = "Leyendo las piezas…";
         try
         {
             var note = NoteBox.Text;
-            var jsonPath = EnsureExtension(dialog.FileName);
-            var reportPath = Path.ChangeExtension(
-                jsonPath.Replace(EvidenceService.FileExtension, ""), ".txt");
-
-            var doc = await Task.Run(() =>
-            {
-                var captured = AppServices.Evidence.Capture(note);
-                AppServices.Evidence.Save(captured, jsonPath);
-                File.WriteAllText(reportPath, AppServices.Evidence.BuildReport(captured),
-                    System.Text.Encoding.UTF8);
-                return captured;
-            });
-
-            FingerprintText.Text = EvidenceService.FormatFingerprint(doc.Fingerprint);
-            FingerprintCard.Visibility = Visibility.Visible;
-            PartCountText.Text = $"{doc.Parts.Count} piezas registradas";
-
-            SetStatus($"Acta guardada · {Path.GetFileName(jsonPath)} y {Path.GetFileName(reportPath)} " +
-                      $"en {Path.GetDirectoryName(jsonPath)}", "Br.Positive");
-
-            RenderPreview(doc);
+            var acta = await Task.Run(() => AppServices.Evidence.CreateAndSave(note));
+            _current = acta;
+            _comparison = null;
+            NoteBox.Text = "";
+            await RefreshListAsync(acta.Path);
+            ShowActa(acta);
+            Status($"Acta creada con {UiKit.Plural(acta.Document.Parts.Count, "pieza", "piezas")}. " +
+                   "Apunta o fotografía el código de verificación: si alguien edita el archivo, dejará de coincidir.", ok: true);
         }
         catch (Exception ex)
         {
-            SetStatus($"No se pudo guardar el acta: {ex.Message}", "Br.Critical");
+            Status($"No se pudo crear el acta: {ex.Message}", ok: false);
         }
-        finally { GenerateButton.IsEnabled = true; }
+        finally
+        {
+            CreateButton.IsEnabled = true;
+            CreateButton.Content = "Crear acta";
+        }
     }
 
-    private static string EnsureExtension(string path) =>
-        path.EndsWith(EvidenceService.FileExtension, StringComparison.OrdinalIgnoreCase)
-            ? path
-            : path.EndsWith(".json", StringComparison.OrdinalIgnoreCase)
-                ? path[..^5] + EvidenceService.FileExtension
-                : path + EvidenceService.FileExtension;
+    // ────────────────────────── Paso 2 · elegir y comprobar ──────────────────────────
 
-    private void PreviewButton_Click(object sender, RoutedEventArgs e)
+    private void ActaList_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (PreviewCard.Visibility == Visibility.Visible)
-        {
-            PreviewCard.Visibility = Visibility.Collapsed;
-            PreviewButton.Content = "Ver piezas detectadas";
-            return;
-        }
-
-        try
-        {
-            RenderPreview(AppServices.Evidence.Capture(NoteBox.Text));
-            PreviewButton.Content = "Ocultar piezas detectadas";
-        }
-        catch (Exception ex)
-        {
-            SetStatus($"No se pudo leer el hardware: {ex.Message}", "Br.Critical");
-        }
+        if (ActaList.SelectedItem is not ActaRow row) return;
+        if (_current is not null && SamePath(_current.Path, row.Acta.Path) && _comparison is not null) return;
+        _current = row.Acta;
+        _comparison = null;
+        ShowActa(row.Acta);
     }
 
-    private void RenderPreview(EvidenceDocument doc)
-    {
-        PreviewPanel.Children.Clear();
-
-        foreach (var group in doc.Parts.GroupBy(p => p.Category))
-        {
-            PreviewPanel.Children.Add(UiKit.Text(group.Key, "T.Label",
-                UiKit.Brush("Br.AccentBright"), new Thickness(0, 0, 0, 8)));
-
-            foreach (var part in group)
-            {
-                var block = new StackPanel { Margin = new Thickness(0, 0, 0, 12) };
-                block.Children.Add(new TextBlock
-                {
-                    Text = part.Name,
-                    Style = UiKit.Style("T.Value"),
-                    FontSize = 13,
-                    TextTrimming = TextTrimming.CharacterEllipsis
-                });
-                block.Children.Add(new TextBlock
-                {
-                    Text = part.HasIdentity
-                        ? $"Serie {part.Identity}" +
-                          (string.IsNullOrWhiteSpace(part.Location) ? "" : $" · {part.Location}")
-                        : "Sin número de serie informado por la BIOS" +
-                          (string.IsNullOrWhiteSpace(part.Location) ? "" : $" · {part.Location}"),
-                    Style = UiKit.Style("T.Mono"),
-                    Foreground = part.HasIdentity
-                        ? UiKit.Brush("Br.TextSecondary")
-                        : UiKit.Brush("Br.TextTertiary"),
-                    Margin = new Thickness(0, 3, 0, 0),
-                    TextTrimming = TextTrimming.CharacterEllipsis
-                });
-                PreviewPanel.Children.Add(block);
-            }
-
-            PreviewPanel.Children.Add(new Border
-            {
-                Style = UiKit.Style("Divider"),
-                Margin = new Thickness(0, 4, 0, 16)
-            });
-        }
-
-        PreviewCard.Visibility = Visibility.Visible;
-    }
-
-    private void OpenFolderButton_Click(object sender, RoutedEventArgs e)
-    {
-        try
-        {
-            Process.Start(new ProcessStartInfo(EvidenceService.DefaultFolder)
-            {
-                UseShellExecute = true
-            });
-        }
-        catch (Exception ex)
-        {
-            SetStatus($"No se pudo abrir la carpeta: {ex.Message}", "Br.Critical");
-        }
-    }
-
-    // ────────────────────────── Verificar ──────────────────────────
-
-    private async void VerifyButton_Click(object sender, RoutedEventArgs e)
+    private async void OpenOther_Click(object sender, RoutedEventArgs e)
     {
         var dialog = new OpenFileDialog
         {
-            Title = "Elegir el acta a verificar",
-            Filter = "Acta de hardware (*.smev.json)|*.smev.json|Todos los archivos|*.*",
-            InitialDirectory = EvidenceService.DefaultFolder
+            Title = "Elegir un acta",
+            Filter = "Acta de Barep (*.smev.json)|*.smev.json|Todos los archivos|*.*",
+            InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop)
         };
         if (dialog.ShowDialog() != true) return;
-
-        VerifyButton.IsEnabled = false;
-        SetStatus("Comparando el acta con el hardware actual…", "Br.TextSecondary");
 
         try
         {
             var path = dialog.FileName;
-            var comparison = await Task.Run(() =>
-            {
-                var saved = AppServices.Evidence.Load(path);
-                return AppServices.Evidence.CompareWithCurrent(saved);
-            });
-
-            _lastComparison = comparison;
-            RenderComparison(comparison);
-            ExportComparisonButton.Visibility = Visibility.Visible;
-            SetStatus($"Acta del {comparison.Saved.CreatedAt:dd/MM/yyyy HH:mm} · " +
-                      $"{comparison.Saved.Parts.Count} piezas registradas", "Br.TextSecondary");
+            var doc = await Task.Run(() => AppServices.Evidence.Load(path));
+            _current = new EvidenceService.SavedActa(path, doc);
+            _comparison = null;
+            await RefreshListAsync(path);
+            ShowActa(_current);
         }
         catch (Exception ex)
         {
-            SetStatus($"No se pudo leer el acta: {ex.Message}", "Br.Critical");
+            Status($"Ese archivo no es un acta válida: {ex.Message}", ok: false);
         }
-        finally { VerifyButton.IsEnabled = true; }
     }
 
-    private void RenderComparison(EvidenceComparison c)
+    private async void Compare_Click(object sender, RoutedEventArgs e)
     {
-        PreviewCard.Visibility = Visibility.Collapsed;
-        PreviewButton.Content = "Ver piezas detectadas";
+        if (_current is not { } acta) return;
 
-        VerdictCard.Visibility = Visibility.Visible;
-        var accent = c.Matches ? UiKit.Brush("Br.Positive") : UiKit.Brush("Br.Critical");
+        CompareButton.IsEnabled = false;
+        CompareButton.Content = "Comprobando…";
+        try
+        {
+            _comparison = await Task.Run(() => AppServices.Evidence.CompareWithCurrent(acta.Document));
+            ShowActa(acta);
+            Status(_comparison.Matches
+                ? "Comprobado: el equipo tiene las mismas piezas que cuando lo dejaste."
+                : "Comprobado: hay piezas que no coinciden con el acta. Revisa la lista.", _comparison.Matches);
+        }
+        catch (Exception ex)
+        {
+            Status($"No se pudo comprobar: {ex.Message}", ok: false);
+        }
+        finally
+        {
+            CompareButton.IsEnabled = true;
+            CompareButton.Content = "Comprobar otra vez";
+        }
+    }
 
-        VerdictTitle.Text = c.Matches
-            ? "Todo coincide con el acta"
-            : UiKit.Plural(c.Alerts.Count, "discrepancia detectada", "discrepancias detectadas");
-        VerdictTitle.Foreground = accent;
-        VerdictCard.BorderBrush = accent;
+    // ────────────────────────── El acta en pantalla ──────────────────────────
 
+    private void ShowActa(EvidenceService.SavedActa? acta)
+    {
+        if (acta is null)
+        {
+            ActaEmpty.Visibility = Visibility.Visible;
+            ActaView.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        ActaEmpty.Visibility = Visibility.Collapsed;
+        ActaView.Visibility = Visibility.Visible;
+
+        var doc = acta.Document;
+        ActaDate.Text = doc.CreatedAt.ToString("d 'de' MMMM 'de' yyyy · HH:mm", Spanish);
+
+        var authentic = AppServices.Evidence.IsAuthentic(doc);
+        IntegrityText.Text = authentic ? "Sin alterar" : "Editada después";
+        IntegrityText.Foreground = UiKit.Brush(authentic ? "Br.Positive" : "Br.Critical");
+        IntegrityChip.Background = UiKit.Brush(authentic ? "Br.PositiveTint" : "Br.CriticalTint");
+        IntegrityChip.ToolTip = authentic
+            ? "La huella SHA-256 coincide: nadie ha tocado el archivo desde que se creó."
+            : "La huella no coincide: el archivo se modificó después de crearse y no sirve como prueba.";
+
+        var specs = new List<(string, string?)>
+        {
+            ("Equipo", doc.MachineName),
+            ("Usuario", doc.UserName),
+            ("Sistema", doc.OperatingSystem),
+            ("Se dejó a", string.IsNullOrWhiteSpace(doc.Note) ? null : doc.Note),
+            ("Código", EvidenceService.ShortCode(doc.Fingerprint))
+        };
+        UiKit.FillSpecs(ActaSpecs, specs.Where(s => !string.IsNullOrWhiteSpace(s.Item2)), labelWidth: 96);
+        if (ActaSpecs.Children.Count > 0 && ActaSpecs.Children[^1] is FrameworkElement code)
+            code.ToolTip = "Huella SHA-256 completa:\n" + EvidenceService.FormatFingerprint(doc.Fingerprint);
+
+        CompareButton.Content = _comparison is null ? "Comprobar ahora" : "Comprobar otra vez";
+        RenderVerdict();
+        RenderParts(doc);
+    }
+
+    private void RenderVerdict()
+    {
+        if (_comparison is not { } c)
+        {
+            VerdictBanner.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        VerdictBanner.Visibility = Visibility.Visible;
         var missing = c.Alerts.Count(d => d.Status == PartStatus.Missing);
         var changed = c.Alerts.Count(d => d.Status == PartStatus.Changed);
         var added = c.Alerts.Count(d => d.Status == PartStatus.Added);
 
-        VerdictDetail.Text = c.Matches
-            ? $"Se verificaron {UiKit.Plural(c.IntactCount, "pieza", "piezas")} contra el acta del " +
-              $"{c.Saved.CreatedAt:dd/MM/yyyy 'a las' HH:mm}. Ninguna cambió."
-            : $"Faltan {missing} · cambiaron {changed} · aparecieron {added}. " +
-              $"{UiKit.Plural(c.IntactCount, "pieza sigue intacta", "piezas siguen intactas")}.";
-
-        if (c.SavedFileIsAuthentic)
+        VerdictBanner.Background = UiKit.Brush(c.Matches ? "Br.PositiveTint" : "Br.CriticalTint");
+        VerdictIcon.Data = (Geometry)FindResource(c.Matches ? "Glyph.Check" : "Glyph.Info");
+        if (c.Matches)
         {
-            IntegrityWarning.Visibility = Visibility.Collapsed;
+            VerdictIcon.Fill = null;
+            VerdictIcon.Stroke = UiKit.Brush("Br.Positive");
+            VerdictIcon.StrokeThickness = 2.6;
         }
         else
         {
-            IntegrityWarning.Visibility = Visibility.Visible;
-            IntegrityText.Text = "La huella SHA-256 guardada en el archivo no coincide con su contenido. " +
-                                 "El acta fue editada después de generarse, así que no sirve como prueba. " +
-                                 "La comparación se muestra igualmente, pero tómala como orientativa.";
+            VerdictIcon.Stroke = null;
+            VerdictIcon.Fill = UiKit.Brush("Br.Critical");
         }
 
-        ResultsCard.Visibility = Visibility.Visible;
-        ResultsPanel.Children.Clear();
-        foreach (var diff in c.Differences)
-            ResultsPanel.Children.Add(BuildDiffRow(diff));
+        VerdictTitle.Text = c.Matches
+            ? "Todo coincide"
+            : UiKit.Plural(c.Alerts.Count, "pieza no coincide", "piezas no coinciden");
+        VerdictTitle.Foreground = UiKit.Brush(c.Matches ? "Br.Positive" : "Br.Critical");
+
+        var parts = new List<string>();
+        if (missing > 0) parts.Add(UiKit.Plural(missing, "falta", "faltan"));
+        if (changed > 0) parts.Add(UiKit.Plural(changed, "cambió", "cambiaron"));
+        if (added > 0) parts.Add(UiKit.Plural(added, "es nueva", "son nuevas"));
+        VerdictDetail.Text = c.Matches
+            ? $"Las {c.IntactCount} piezas son las mismas que el {c.Saved.CreatedAt:d 'de' MMMM}. Comprobado hoy a las {DateTime.Now:HH:mm}."
+            : string.Join(" · ", parts) + $". {UiKit.Plural(c.IntactCount, "pieza sigue igual", "piezas siguen iguales")}." +
+              (c.SavedFileIsAuthentic ? "" : " Ojo: el archivo del acta fue editado, así que tómalo como orientativo.");
     }
 
-    private static Grid BuildDiffRow(EvidenceDiff diff)
+    /// <summary>Las piezas del acta por categorías; tras comprobar, cada una con su estado.</summary>
+    private void RenderParts(EvidenceDocument doc)
     {
-        var (label, brush) = diff.Status switch
-        {
-            PartStatus.Missing => ("Falta", UiKit.Brush("Br.Critical")),
-            PartStatus.Changed => ("Cambió", UiKit.Brush("Br.Warn")),
-            PartStatus.Added => ("Nueva", UiKit.Brush("Br.AccentBright")),
-            _ => ("Correcta", UiKit.Brush("Br.Positive"))
-        };
+        PartsPanel.Children.Clear();
 
-        var row = new Grid { Margin = new Thickness(0, 0, 0, 14) };
-        row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(86) });
-        row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-
-        var pill = new Border
+        if (_comparison is { } c)
         {
-            CornerRadius = new CornerRadius(6),
-            BorderBrush = brush,
-            BorderThickness = new Thickness(1),
-            Background = Tint(brush),
-            Padding = new Thickness(9, 3, 9, 3),
-            HorizontalAlignment = HorizontalAlignment.Left,
-            VerticalAlignment = VerticalAlignment.Top,
-            Margin = new Thickness(0, 1, 12, 0),
-            Child = new TextBlock
+            foreach (var group in c.Differences.GroupBy(d => d.Category))
             {
-                Text = label,
-                Style = UiKit.Style("ChipText"),
-                Foreground = brush
+                PartsPanel.Children.Add(CategoryHeader(group.Key));
+                foreach (var diff in group)
+                    PartsPanel.Children.Add(PartRow(diff.Name, diff.Location, diff.Detail, diff.Status));
             }
-        };
+            return;
+        }
 
-        var body = new StackPanel();
-        body.Children.Add(new TextBlock
+        foreach (var group in doc.Parts.GroupBy(p => p.Category))
         {
-            Text = $"{diff.Category} · {diff.Name}",
-            Style = UiKit.Style("T.Value"),
-            FontSize = 13,
-            TextTrimming = TextTrimming.CharacterEllipsis,
-            ToolTip = $"{diff.Category} · {diff.Name}"
-        });
-
-        var detail = string.IsNullOrWhiteSpace(diff.Location)
-            ? diff.Detail
-            : $"{diff.Location} — {diff.Detail}";
-        body.Children.Add(new TextBlock
-        {
-            Text = detail,
-            Style = UiKit.Style("T.Secondary"),
-            FontSize = 12,
-            Margin = new Thickness(0, 3, 0, 0)
-        });
-
-        Grid.SetColumn(pill, 0);
-        Grid.SetColumn(body, 1);
-        row.Children.Add(pill);
-        row.Children.Add(body);
-        return row;
+            PartsPanel.Children.Add(CategoryHeader(group.Key));
+            foreach (var part in group)
+            {
+                var serial = part.HasIdentity ? $"Serie {part.Identity}" : "Sin número de serie";
+                PartsPanel.Children.Add(PartRow(part.Name, part.Location, serial, status: null));
+            }
+        }
     }
 
-    /// <summary>Versión translúcida del color de estado, para el fondo de la píldora.</summary>
-    private static Brush Tint(Brush source)
+    private static TextBlock CategoryHeader(string category) =>
+        UiKit.Text(category.ToUpper(Spanish), "T.Label", UiKit.Brush("Br.AccentBright"),
+            new Thickness(0, 10, 0, 8));
+
+    private static FrameworkElement PartRow(string name, string location, string detail, PartStatus? status)
     {
-        if (source is not SolidColorBrush solid) return Brushes.Transparent;
-        var color = solid.Color;
-        var tint = new SolidColorBrush(Color.FromArgb(0x26, color.R, color.G, color.B));
-        tint.Freeze();
-        return tint;
+        var grid = new Grid { Margin = new Thickness(0, 0, 0, 12) };
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+        var text = new StackPanel { Margin = new Thickness(0, 0, 12, 0) };
+        var title = UiKit.Text(name, "T.Value");
+        title.TextTrimming = TextTrimming.CharacterEllipsis;
+        title.ToolTip = name;
+        text.Children.Add(title);
+
+        var line = string.IsNullOrWhiteSpace(location) ? detail : $"{location} · {detail}";
+        var caption = UiKit.Text(line, status is PartStatus.Intact or null ? "T.Mono" : "T.Caption",
+            margin: new Thickness(0, 3, 0, 0));
+        caption.TextWrapping = TextWrapping.Wrap;
+        if (status is PartStatus.Missing or PartStatus.Changed) caption.Foreground = UiKit.Brush("Br.TextPrimary");
+        text.Children.Add(caption);
+        grid.Children.Add(text);
+
+        if (status is { } s)
+        {
+            var (label, fg, bg) = s switch
+            {
+                PartStatus.Missing => ("Falta", "Br.Critical", "Br.CriticalTint"),
+                PartStatus.Changed => ("Cambió", "Br.Warn", "Br.WarnTint"),
+                PartStatus.Added => ("Nueva", "Br.AccentBright", "Br.AccentTint"),
+                _ => ("Igual", "Br.Positive", "Br.PositiveTint")
+            };
+            var chip = UiKit.Chip(label, UiKit.Brush(fg), UiKit.Brush(bg));
+            chip.VerticalAlignment = VerticalAlignment.Top;
+            Grid.SetColumn(chip, 1);
+            grid.Children.Add(chip);
+        }
+
+        var wrapper = new StackPanel();
+        wrapper.Children.Add(grid);
+        return wrapper;
     }
 
-    private void ExportComparisonButton_Click(object sender, RoutedEventArgs e)
+    // ────────────────────────── Acciones del acta ──────────────────────────
+
+    private void Print_Click(object sender, RoutedEventArgs e)
     {
-        if (_lastComparison is null) return;
+        if (_current is not { } acta) return;
 
         var dialog = new SaveFileDialog
         {
-            Title = "Guardar informe de verificación",
-            FileName = EvidenceService.SuggestedFileName("-verificacion.txt"),
+            Title = "Guardar el acta para imprimir",
+            FileName = Path.GetFileName(acta.Path).Replace(EvidenceService.FileExtension, ".txt"),
             Filter = "Documento de texto (*.txt)|*.txt",
-            InitialDirectory = EvidenceService.DefaultFolder
+            InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop)
         };
         if (dialog.ShowDialog() != true) return;
 
         try
         {
-            File.WriteAllText(dialog.FileName,
-                AppServices.Evidence.BuildComparisonReport(_lastComparison),
-                System.Text.Encoding.UTF8);
-            SetStatus($"Informe guardado en {dialog.FileName}", "Br.Positive");
+            var text = new StringBuilder(AppServices.Evidence.BuildReport(acta.Document));
+            if (_comparison is not null)
+            {
+                text.AppendLine();
+                text.Append(AppServices.Evidence.BuildComparisonReport(_comparison));
+            }
+            File.WriteAllText(dialog.FileName, text.ToString(), Encoding.UTF8);
+            Status($"Guardado en {dialog.FileName}. Imprímelo y que lo firme quien recibe el equipo.", ok: true);
         }
         catch (Exception ex)
         {
-            SetStatus($"No se pudo guardar el informe: {ex.Message}", "Br.Critical");
+            Status($"No se pudo guardar: {ex.Message}", ok: false);
         }
     }
 
-    private void SetStatus(string message, string brushKey)
+    private void Reveal_Click(object sender, RoutedEventArgs e)
+    {
+        if (_current is { } acta) AppManager.Reveal(acta.Path);
+    }
+
+    private async void Delete_Click(object sender, RoutedEventArgs e)
+    {
+        if (_current is not { } acta) return;
+        var answer = MessageBox.Show(
+            $"Se moverá a la papelera el acta del {acta.Document.CreatedAt:d 'de' MMMM, HH:mm}.\n\n" +
+            "Si todavía no has recogido el equipo, la necesitarás para comprobarlo.",
+            "Borrar acta", MessageBoxButton.OKCancel, MessageBoxImage.Warning, MessageBoxResult.Cancel);
+        if (answer != MessageBoxResult.OK) return;
+
+        var window = Window.GetWindow(this);
+        var handle = window is null ? IntPtr.Zero : new WindowInteropHelper(window).Handle;
+        await AppManager.RecycleAsync(new[] { acta.Path }, handle);
+
+        _current = null;
+        _comparison = null;
+        await RefreshListAsync(selectPath: null);
+        ShowActa(null);
+        Status("Acta movida a la papelera.", ok: true);
+    }
+
+    // ────────────────────────── Ficha del equipo ──────────────────────────
+
+    private async void Sheet_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new SaveFileDialog
+        {
+            Title = "Guardar la ficha del equipo",
+            FileName = $"ficha-{Environment.MachineName}-{DateTime.Now:yyyyMMdd-HHmm}.txt",
+            Filter = "Documento de texto (*.txt)|*.txt",
+            InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop)
+        };
+        if (dialog.ShowDialog() != true) return;
+
+        SheetButton.IsEnabled = false;
+        try
+        {
+            var path = dialog.FileName;
+            await Task.Run(() =>
+            {
+                var statics = AppServices.Hardware.GetStatic();
+                var realtime = AppServices.Monitor.Latest ?? AppServices.Hardware.GetRealtime();
+                File.WriteAllText(path, SystemReport.Build(statics, realtime), Encoding.UTF8);
+            });
+            Status($"Ficha guardada en {path}", ok: true);
+        }
+        catch (Exception ex)
+        {
+            Status($"No se pudo guardar la ficha: {ex.Message}", ok: false);
+        }
+        finally { SheetButton.IsEnabled = true; }
+    }
+
+    private void Status(string message, bool ok)
     {
         StatusText.Text = message;
-        StatusText.Foreground = UiKit.Brush(brushKey);
+        StatusText.Foreground = UiKit.Brush(ok ? "Br.Positive" : "Br.Critical");
+    }
+
+    // ────────────────────────── Fila de la lista ──────────────────────────
+
+    public sealed class ActaRow
+    {
+        public ActaRow(EvidenceService.SavedActa acta) => Acta = acta;
+
+        public EvidenceService.SavedActa Acta { get; }
+
+        public string Title => Acta.Document.CreatedAt.ToString("d 'de' MMMM yyyy, HH:mm", Spanish);
+
+        public string Subtitle
+        {
+            get
+            {
+                var doc = Acta.Document;
+                var who = string.IsNullOrWhiteSpace(doc.Note) ? doc.MachineName : doc.Note;
+                return $"{who} · {UiText.Plural(doc.Parts.Count, "pieza", "piezas")}";
+            }
+        }
     }
 }

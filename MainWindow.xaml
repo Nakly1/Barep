@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
         Title="Barep"
+        Icon="/Assets/app.ico"
         Height="770" Width="1180"
         MinWidth="960" MinHeight="600"
         WindowStartupLocation="CenterScreen"
@@ -38,12 +39,9 @@
             <!-- ══════════ Identidad (esquina superior izquierda) ══════════ -->
             <Border Grid.Row="0" Grid.Column="0" Background="{StaticResource Br.Sidebar}">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="22,0">
-                    <Border Width="24" Height="24" CornerRadius="7"
-                            Background="{StaticResource Br.AccentGradient}"
-                            Margin="0,0,11,0">
-                        <Path Data="{StaticResource Icon.Brand}" Fill="#FF0A0810"
-                              Width="11" Height="11" Stretch="Uniform"
-                              HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <Border Width="26" Height="26" CornerRadius="7" Background="#FFF5F5F7" Margin="0,0,11,0">
+                        <Image Source="/Assets/logo.png" Width="21" Height="21"
+                               RenderOptions.BitmapScalingMode="HighQuality"/>
                     </Border>
                     <TextBlock Text="Barep" FontSize="13.5" FontWeight="SemiBold"
                                Foreground="{StaticResource Br.TextPrimary}"
@@ -53,6 +51,22 @@
 
             <!-- ══════════ Barra de título con métricas vivas ══════════ -->
             <Grid Grid.Row="0" Grid.Column="1" Background="{StaticResource Br.Base}">
+                <!-- Aviso de la red: aparato nuevo o router sospechoso. Clic para verlo. -->
+                <Border x:Name="NetToast" Visibility="Collapsed" HorizontalAlignment="Left" VerticalAlignment="Center"
+                        Margin="22,0,0,0" CornerRadius="8" Padding="12,6" Cursor="Hand"
+                        Background="{StaticResource Br.WarnTint}" MouseLeftButtonUp="NetToast_Click"
+                        shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                    <StackPanel Orientation="Horizontal">
+                        <Ellipse x:Name="NetToastDot" Width="7" Height="7" Fill="{StaticResource Br.Warn}"
+                                 Margin="0,0,9,0" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="NetToastText" FontSize="12" FontWeight="Medium"
+                                   Foreground="{StaticResource Br.TextPrimary}" VerticalAlignment="Center"
+                                   MaxWidth="460" TextTrimming="CharacterEllipsis"/>
+                        <TextBlock Text="Ver" FontSize="12" FontWeight="SemiBold" Margin="12,0,0,0"
+                                   Foreground="{StaticResource Br.AccentBright}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center"
                             HorizontalAlignment="Right" Margin="0,0,4,0">
 
@@ -98,7 +112,7 @@
                             </StackPanel>
                         </Button>
                         <Border Style="{StaticResource Divider}" Margin="0,0,0,14"/>
-                        <TextBlock Text="Barep 2.3" FontSize="11" FontWeight="Medium"
+                        <TextBlock Text="Barep 2.4" FontSize="11" FontWeight="Medium"
                                    Foreground="{StaticResource Br.TextSecondary}"/>
                         <TextBlock x:Name="FooterStatus" Text="Iniciando…"
                                    FontSize="10.5" Foreground="{StaticResource Br.TextTertiary}"
@@ -110,6 +124,8 @@
                                Foreground="{StaticResource Br.TextTertiary}"
                                Margin="23,18,20,8"/>
 
+                    <!-- Con muchas secciones y la ventana baja, la lista se desplaza en vez de cortarse -->
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <StackPanel VerticalAlignment="Top">
                         <RadioButton x:Name="NavOverview" Content="Resumen" IsChecked="True"
                                      Style="{StaticResource NavItem}"
@@ -139,6 +155,10 @@
                                      Style="{StaticResource NavItem}"
                                      Tag="{StaticResource Icon.Processes}"
                                      Checked="Nav_Checked"/>
+                        <RadioButton x:Name="NavNetwork" Content="Red"
+                                     Style="{StaticResource NavItem}"
+                                     Tag="{StaticResource Icon.Network}"
+                                     Checked="Nav_Checked"/>
 
                         <TextBlock Text="Equipo" FontSize="10.5" FontWeight="SemiBold"
                                    Foreground="{StaticResource Br.TextTertiary}"
@@ -156,11 +176,8 @@
                                      Style="{StaticResource NavItem}"
                                      Tag="{StaticResource Icon.Evidence}"
                                      Checked="Nav_Checked"/>
-                        <RadioButton x:Name="NavTools" Content="Herramientas"
-                                     Style="{StaticResource NavItem}"
-                                     Tag="{StaticResource Icon.Tools}"
-                                     Checked="Nav_Checked"/>
                     </StackPanel>
+                    </ScrollViewer>
                 </DockPanel>
             </Border>
 

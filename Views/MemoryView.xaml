@@ -56,6 +56,36 @@
                 </Grid>
             </Border>
 
+            <!-- ─── Liberar memoria ─── -->
+            <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Margin="0,0,24,0">
+                        <TextBlock Text="Liberar memoria" Style="{StaticResource T.Headline}"/>
+                        <TextBlock Style="{StaticResource T.Caption}" TextWrapping="Wrap" Margin="0,4,0,12"
+                                   Text="Pide a cada programa que suelte la memoria que tiene apartada sin usar y vacía la caché de archivos de Windows. No cierra nada ni borra datos: lo que un programa necesite lo vuelve a cargar. Viene bien antes de abrir un juego o un programa pesado; no hace falta hacerlo a todas horas."/>
+                        <StackPanel Orientation="Horizontal">
+                            <CheckBox x:Name="PurgeCacheCheck" Style="{StaticResource Check}" IsChecked="True"/>
+                            <TextBlock x:Name="PurgeCacheText" Style="{StaticResource T.Secondary}" Margin="9,0,0,0"
+                                       VerticalAlignment="Center" Text="Vaciar también la caché de archivos"/>
+                            <Button x:Name="MemAdminButton" Content="Abrir como administrador" Style="{StaticResource BtnLink}"
+                                    Margin="10,0,0,0" VerticalAlignment="Center" Click="MemAdmin_Click" Visibility="Collapsed"/>
+                        </StackPanel>
+                        <TextBlock x:Name="CleanResultText" Style="{StaticResource T.Secondary}" TextWrapping="Wrap"
+                                   Margin="0,12,0,0" Visibility="Collapsed"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <Button x:Name="CleanRamButton" Content="Liberar ahora" Style="{StaticResource BtnPrimary}"
+                                Padding="22,9" Click="CleanRam_Click"/>
+                        <TextBlock x:Name="CacheSizeText" Style="{StaticResource T.Caption}" HorizontalAlignment="Center"
+                                   Margin="0,8,0,0"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
             <!-- ─── Resumen físico ─── -->
             <Border Style="{StaticResource Card}" Padding="0" Margin="0,0,0,22">
                 <Grid x:Name="SummaryStrip">

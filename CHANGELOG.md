@@ -7,31 +7,41 @@ el versionado sigue [SemVer](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
-## [2.3.0] - 2026-10-14
+## [2.4.0] - 2026-10-16
 
 ### Added
-- **Aplicaciones**: lista de todo lo instalado (programas y apps de la
-  Microsoft Store) con su icono, fabricante, version, fecha y lo que ocupa
-  entre programa, datos y cache.
-- Borrado de la cache de una aplicacion concreta, con revision previa de lo que
-  se va a borrar y barra de progreso.
-- Antes de desinstalar por completo, ventana con **con que esta enlazada**: si
-  esta abierta, servicios, arranque de Windows, tareas programadas, tipos de
-  archivo que abre, programas dentro de su carpeta y datos que dejara.
+- **Red**: seccion nueva con pestañas Resumen, Aparatos, Actividad, Velocidad, Wi-Fi, Seguridad
+  y Conexiones.
+- Descubrimiento de aparatos por ARP (incluidos los moviles que no responden al ping) con nombre,
+  marca y modelo a partir de mDNS/Bonjour, UPnP, NetBIOS, DNS y el registro OUI del IEEE.
+- Deteccion de direcciones MAC privadas, nombres propios para cada aparato y marca de «es mio».
+- Vigilancia cada 3 minutos con historial de entradas y salidas, tiempo conectado hoy y aviso en
+  la barra superior cuando se conecta un aparato que nunca se habia visto.
+- Deteccion de suplantacion del router (MAC del router duplicada o cambiada).
+- Test de velocidad (bajada, subida, ping y variacion) con historial y explicacion del resultado.
+- Wi-Fi: señal en % y dBm, estandar, banda, canal, cifrado, redes cercanas y canal mas libre;
+  quitar el ahorro de energia del adaptador y comparar el DNS con Cloudflare, Google y Quad9.
+- Auditoria de seguridad con puntuacion y conexiones activas por programa.
+- **Aplicaciones**: todo lo instalado (programas y apps de la Microsoft Store) con lo que ocupa
+  entre programa, datos y cache; borrar la cache de una app y desinstalar por completo viendo
+  antes con que esta enlazada (servicios, arranque, tareas, tipos de archivo, otros programas).
+- **Liberar memoria** en Memoria, con el antes y el despues.
+- Logo nuevo: icono del ejecutable, de la ventana y de la barra lateral.
 
 ### Changed
-- **Procesos** muestra ahora todo lo que se ejecuta, incluido lo que trabaja sin
-  ventana: agrupado por programa, con CPU y memoria en vivo, buscador, filtros
-  (aplicaciones / segundo plano / Windows), orden y ficha con cada PID.
-- Los procesos de Windows se identifican por su servicio (ya no son seis
-  «svchost» sin nombre) y los que el sistema necesita no se pueden finalizar.
-- La lectura de cada dos segundos ya no enumera todos los procesos: el resumen
-  arranca y se actualiza mas rapido.
-- Nombre interno del proyecto unificado a `Barep` (`Barep.csproj`).
+- **Procesos** muestra todo lo que se ejecuta, tambien lo que no tiene ventana, agrupado por
+  programa, con CPU y memoria en vivo, buscador, filtros y ficha con cada PID.
+- **Evidencia** mas sencilla, en dos pasos (crear acta / comprobar al recogerlo). Las actas se
+  guardan solas, se listan en la app y se ven como un documento con cada pieza marcada como
+  igual, cambiada, ausente o nueva.
+- Herramientas desaparece: la ficha completa del equipo pasa a Evidencia.
+- Optimizar explica que el interruptor indica si la funcion esta encendida y marca con ✓ verde
+  las que ya estan como se recomienda.
+- La lectura de cada dos segundos ya no enumera todos los procesos: la app va mas ligera.
 
-### Removed
-- Codigo sin uso: limpieza de temporales antigua, dos ayudantes de formato y una
-  propiedad del arbol de la Lupa que ya no se consultaba.
+### Fixed
+- Resumen y Memoria dejaban de actualizarse al volver a la seccion.
+- Las cajas de texto con altura fija cortaban lo que se escribia.
 
 ## [2.2.0] - 2026-09-19
 
@@ -129,6 +139,6 @@ el versionado sigue [SemVer](https://semver.org/lang/es/).
 - Lectura de hardware via WMI, registro de Windows y P/Invoke.
 - Build self-contained-false para .NET 8 Desktop Runtime.
 
-[Unreleased]: https://github.com/Nakly1/SystemMonitorDesktop/compare/v2.0.0...HEAD
+[Unreleased]: https://github.com/Nakly1/SystemMonitorDesktop/compare/v2.4.0...HEAD
 [2.0.0]: https://github.com/Nakly1/SystemMonitorDesktop/compare/v1.0.0...v2.0.0
 [1.0.0]: https://github.com/Nakly1/SystemMonitorDesktop/releases/tag/v1.0.0

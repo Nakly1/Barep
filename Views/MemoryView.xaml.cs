@@ -19,15 +19,83 @@ public partial class MemoryView : UserControl
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
-        if (_staticLoaded) return;
-        _staticLoaded = true;
+        if (!_staticLoaded)
+        {
+            _staticLoaded = true;
+            ApplyStatic(AppServices.Hardware.GetStatic());
+            Unloaded += (_, _) => AppServices.Monitor.Sampled -= Apply;
+        }
 
-        ApplyStatic(AppServices.Hardware.GetStatic());
-
+        // Se vuelve a escuchar en cada visita: al salir de la sección se deja de escuchar.
+        AppServices.Monitor.Sampled -= Apply;
         AppServices.Monitor.Sampled += Apply;
         if (AppServices.Monitor.Latest is { } latest) Apply(latest);
+        UpdateCleanUi();
+    }
 
-        Unloaded += (_, _) => AppServices.Monitor.Sampled -= Apply;
+    // ────────────────────────── Liberar memoria ──────────────────────────
+
+    private bool _cleaning;
+
+    private void UpdateCleanUi()
+    {
+        var admin = TweakCatalog.IsAdmin;
+        PurgeCacheCheck.IsEnabled = admin;
+        if (!admin)
+        {
+            PurgeCacheCheck.IsChecked = false;
+            PurgeCacheText.Text = "Vaciar también la caché de archivos (necesita administrador)";
+            MemAdminButton.Visibility = Visibility.Visible;
+        }
+
+        var status = MemoryCleaner.Status();
+        CacheSizeText.Text = status.Cache > 0 ? $"Caché de archivos: {UiText.Size(status.Cache)}" : "";
+    }
+
+    private async void CleanRam_Click(object sender, RoutedEventArgs e)
+    {
+        if (_cleaning) return;
+        _cleaning = true;
+        CleanRamButton.IsEnabled = false;
+        CleanRamButton.Content = "Liberando…";
+        CleanResultText.Visibility = Visibility.Collapsed;
+
+        var purge = PurgeCacheCheck.IsChecked == true;
+        try
+        {
+            var total = MemoryCleaner.Status().Total;
+            var result = await Task.Run(() => MemoryCleaner.Clean(purge));
+
+            double Percent(long used) => total > 0 ? used * 100.0 / total : 0;
+            var text = result.Freed >= 64L * 1024 * 1024
+                ? $"Listo: {UiText.Size(result.Freed)} menos en uso ({Percent(result.UsedBefore):0} % → {Percent(result.UsedAfter):0} %)."
+                : "La memoria ya estaba bien aprovechada: casi no había nada que soltar.";
+            if (result.CachePurged && result.CacheFreed > 0) text += $" Caché vaciada: {UiText.Size(result.CacheFreed)}.";
+            text += " Los programas recuperan lo que necesiten a medida que lo usen.";
+
+            CleanResultText.Text = text;
+            CleanResultText.Foreground = UiKit.Brush("Br.Positive");
+            CleanResultText.Visibility = Visibility.Visible;
+            await AppServices.Monitor.SampleAsync();
+        }
+        catch
+        {
+            CleanResultText.Text = "No se pudo liberar la memoria.";
+            CleanResultText.Foreground = UiKit.Brush("Br.Critical");
+            CleanResultText.Visibility = Visibility.Visible;
+        }
+        finally
+        {
+            _cleaning = false;
+            CleanRamButton.IsEnabled = true;
+            CleanRamButton.Content = "Liberar ahora";
+            UpdateCleanUi();
+        }
+    }
+
+    private void MemAdmin_Click(object sender, RoutedEventArgs e)
+    {
+        if (TweakService.RelaunchAsAdmin("memoria")) Application.Current.Shutdown();
     }
 
     private void ApplyStatic(StaticSnapshot s)

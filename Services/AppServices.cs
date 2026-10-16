@@ -1,3 +1,5 @@
+using Barep.Services.Net;
+
 namespace Barep.Services;
 
 /// <summary>
@@ -11,4 +13,5 @@ public static class AppServices
     public static HardwareService Hardware { get; } = new();
     public static MonitorService Monitor { get; } = new(Hardware);
     public static EvidenceService Evidence { get; } = new(Hardware);
+    public static NetworkMonitor Network { get; } = new();
 }

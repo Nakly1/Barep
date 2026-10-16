@@ -17,15 +17,17 @@ public partial class OverviewView : UserControl
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
-        if (_staticLoaded) return;
-        _staticLoaded = true;
+        if (!_staticLoaded)
+        {
+            _staticLoaded = true;
+            ApplyStatic(AppServices.Hardware.GetStatic());
+            Unloaded += (_, _) => AppServices.Monitor.Sampled -= Apply;
+        }
 
-        ApplyStatic(AppServices.Hardware.GetStatic());
-
+        // Se vuelve a escuchar en cada visita: al salir de la sección se deja de escuchar.
+        AppServices.Monitor.Sampled -= Apply;
         AppServices.Monitor.Sampled += Apply;
         if (AppServices.Monitor.Latest is { } latest) Apply(latest);
-
-        Unloaded += (_, _) => AppServices.Monitor.Sampled -= Apply;
     }
 
     private void ApplyStatic(StaticSnapshot s)

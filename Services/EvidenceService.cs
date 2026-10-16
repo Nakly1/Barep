@@ -119,6 +119,42 @@ public class EvidenceService
     public static string SuggestedFileName(string extension) =>
         $"evidencia-{Environment.MachineName}-{DateTime.Now:yyyyMMdd-HHmm}{extension}";
 
+    /// <summary>Un acta guardada en disco, ya leída.</summary>
+    public sealed record SavedActa(string Path, EvidenceDocument Document);
+
+    /// <summary>Las actas de la carpeta de Barep, la más reciente primero.</summary>
+    public List<SavedActa> ListSaved()
+    {
+        var list = new List<SavedActa>();
+        try
+        {
+            foreach (var file in Directory.EnumerateFiles(DefaultFolder, "*" + FileExtension))
+            {
+                try { list.Add(new SavedActa(file, Load(file))); }
+                catch { /* un archivo dañado no impide ver los demás */ }
+            }
+        }
+        catch { }
+        return list.OrderByDescending(a => a.Document.CreatedAt).ToList();
+    }
+
+    /// <summary>Toma el acta y la guarda directamente en la carpeta de Barep, sin preguntar dónde.</summary>
+    public SavedActa CreateAndSave(string note)
+    {
+        var doc = Capture(note);
+        var path = Path.Combine(DefaultFolder, SuggestedFileName(FileExtension));
+        for (var i = 2; File.Exists(path); i++)
+            path = Path.Combine(DefaultFolder, SuggestedFileName($"-{i}{FileExtension}"));
+        Save(doc, path);
+        return new SavedActa(path, doc);
+    }
+
+    /// <summary>«3F2A-9C81-D0E4-77B1»: los primeros dígitos de la huella, fáciles de apuntar o fotografiar.</summary>
+    public static string ShortCode(string fingerprint) =>
+        string.IsNullOrWhiteSpace(fingerprint) || fingerprint.Length < 16
+            ? HardwareText.Unknown
+            : string.Join("-", Enumerable.Range(0, 4).Select(i => fingerprint.Substring(i * 4, 4)));
+
     // ────────────────────────── Captura ──────────────────────────
 
     public EvidenceDocument Capture(string note = "")

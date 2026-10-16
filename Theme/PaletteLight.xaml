@@ -80,6 +80,7 @@
     <SolidColorBrush x:Key="Br.Backdrop" Color="#99101014"/>
     <SolidColorBrush x:Key="Br.PositiveTint" Color="#1A0F8A62"/>
     <SolidColorBrush x:Key="Br.WarnTint" Color="#1AB26B00"/>
+    <SolidColorBrush x:Key="Br.CriticalTint" Color="#1AD0243E"/>
 
     <!-- Degradados -->
     <LinearGradientBrush x:Key="Br.AccentGradient" StartPoint="0,0" EndPoint="1,1">

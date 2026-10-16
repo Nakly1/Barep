@@ -8,6 +8,7 @@
     <RootNamespace>Barep</RootNamespace>
     <AssemblyName>Barep</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
     <!-- Sin esto, `dotnet restore` no genera destino para net8.0-windows/win-x64
          y publicar despues con ese RID falla con NETSDK1047. -->
     <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
@@ -18,9 +19,9 @@
     <AssemblyTitle>Barep</AssemblyTitle>
     <Description>Monitor, limpieza y optimización de Windows.</Description>
     <Company>Barep</Company>
-    <Version>2.3.0</Version>
-    <FileVersion>2.3.0.0</FileVersion>
-    <AssemblyVersion>2.3.0.0</AssemblyVersion>
+    <Version>2.4.0</Version>
+    <FileVersion>2.4.0.0</FileVersion>
+    <AssemblyVersion>2.4.0.0</AssemblyVersion>
     <Copyright>Copyright © 2026</Copyright>
     <NeutralLanguage>es</NeutralLanguage>
   </PropertyGroup>
@@ -39,5 +40,16 @@
 
   <ItemGroup>
     <PackageReference Include="System.Management" Version="8.0.0" />
+  </ItemGroup>
+
+  <!-- Fabricantes de tarjetas de red (registro OUI del IEEE) para la sección Red. -->
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\oui.txt.gz" LogicalName="Barep.oui.txt.gz" />
+  </ItemGroup>
+
+  <!-- Logo de la app: icono del .exe, de la ventana y de la barra lateral. -->
+  <ItemGroup>
+    <Resource Include="Assets\logo.png" />
+    <Resource Include="Assets\app.ico" />
   </ItemGroup>
 </Project>
